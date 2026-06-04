@@ -1,4 +1,5 @@
-import { Phone, Facebook, Youtube, Mail } from "lucide-react";
+import { Phone, Facebook, Youtube, Mail, LayoutDashboard } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const TopBar = () => {
   return (
@@ -10,10 +11,15 @@ const TopBar = () => {
           <a href="tel:19006680" className="text-primary hover:underline font-semibold">1900 6680</a>
         </div>
 
-        <div className="hidden md:flex items-center gap-4 text-xs text-text-muted-foreground">
+        <div className="hidden md:flex items-center gap-4 text-xs">
           <span className="text-primary-foreground/70">Quà Tặng Doanh Nghiệp</span>
           <span className="text-border">|</span>
           <span className="text-primary-foreground/70">Bán Buôn Cây Cảnh</span>
+          <span className="text-border">|</span>
+          <Link to="/admin" className="flex items-center gap-1 text-primary hover:underline font-bold">
+            <LayoutDashboard className="h-3 w-3" />
+            Dashboard Admin
+          </Link>
         </div>
 
         <div className="flex items-center gap-3">

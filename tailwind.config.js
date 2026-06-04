@@ -48,6 +48,9 @@ export default {
           orange: "hsl(var(--brand-orange))",
           gray: "hsl(var(--brand-gray))",
         },
+        indigo: {
+          600: '#5932EA',
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
