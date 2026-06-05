@@ -1,3 +1,4 @@
+import { useState } from "react";
 import TopBar from "@/components/shop/TopBar";
 import Header from "@/components/shop/Header";
 import NavMenu from "@/components/shop/NavMenu";
@@ -9,20 +10,22 @@ import FeaturedProducts from "@/components/shop/FeaturedProducts";
 import Footer from "@/components/shop/Footer";
 
 const Index = () => {
+  const [searchKeyword, setSearchKeyword] = useState("");
+
   return (
     <div className="min-h-full bg-background flex flex-col">
       {/* Topbar */}
       <TopBar />
 
       {/* Header */}
-      <Header />
+      <Header onSearch={setSearchKeyword} />
 
       {/* Navigation */}
       <NavMenu />
 
       {/* Main content */}
       <main className="flex-1">
-        <div className="container mx-auto py-4 space-y-4">
+        <div className="container mx-auto py-4 space-y-8">
           {/* Hero section: sidebar + banner */}
           <div className="flex gap-4">
             {/* Category sidebar - hidden on mobile */}
@@ -40,14 +43,10 @@ const Index = () => {
           <TrustBanner />
 
           {/* Promo banners */}
-          <div>
-            <PromoGrid />
-          </div>
+          <PromoGrid />
 
           {/* Products */}
-          <div>
-            <FeaturedProducts />
-          </div>
+          <FeaturedProducts keyword={searchKeyword} />
         </div>
       </main>
 

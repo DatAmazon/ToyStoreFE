@@ -3,6 +3,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import ProductManagement from './pages/ProductManagement';
 import CategoryManagement from './pages/CategoryManagement';
 import Index from './pages/Index';
+import AboutPage from './pages/AboutPage';
+import ProductsPage from './pages/ProductsPage';
 import ProductDetail from './pages/ProductDetail';
 import { CartProvider } from './api/CartContext';
 import { ToastProvider } from './components/ui/Toast';
@@ -16,6 +18,8 @@ function App() {
           <Routes>
             {/* Trang chủ Shop */}
             <Route path="/" element={<Index />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/products" element={<ProductsPage />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             
             {/* Trang Dashboard Admin */}

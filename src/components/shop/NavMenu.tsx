@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 const navLinks = [
-  { label: "Trang chủ", href: "#", active: true },
-  { label: "Giới thiệu", href: "#" },
-  { label: "Sản phẩm", href: "#" },
-  { label: "Tin tức", href: "#" },
+  { label: "Trang chủ", href: "/" },
+  { label: "Sản phẩm", href: "/products" },
   { label: "Khuyến mại", href: "#" },
-  { label: "Tuyển dụng", href: "#" },
-  { label: "Liên hệ", href: "#" },
+  { label: "Giới thiệu", href: "/about" },
+  // { label: "Tin tức", href: "#" },
+  // { label: "Tuyển dụng", href: "#" },
+  // { label: "Liên hệ", href: "#" },
 ];
 
 const NavMenu = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [active, setActive] = useState("Trang chủ");
+  const location = useLocation();
 
   return (
     <div className="bg-card border-b border-border shadow-sm">
@@ -31,20 +32,22 @@ const NavMenu = () => {
 
         {/* Nav links */}
         <nav className="flex items-center overflow-x-auto scrollbar-hide">
-          {navLinks.map(link => (
-            <a
-              key={link.label}
-              href={link.href}
-              onClick={() => setActive(link.label)}
-              className={`px-4 py-3.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
-                active === link.label
-                  ? "text-primary border-primary"
-                  : "text-foreground border-transparent hover:text-primary hover:border-primary/40"
-              }`}
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map(link => {
+            const isActive = location.pathname === link.href;
+            return (
+              <Link
+                key={link.label}
+                to={link.href}
+                className={`px-4 py-3.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                  isActive
+                    ? "text-primary border-primary"
+                    : "text-foreground border-transparent hover:text-primary hover:border-primary/40"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </div>

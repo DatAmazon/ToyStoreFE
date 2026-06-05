@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/api/CartContext";
 import { useToast } from "@/components/ui/Toast";
+import { animateFlyToCart } from "@/lib/utils";
 
 interface Product {
   id: string; 
@@ -32,10 +33,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
   const { showToast } = useToast();
 
+  const displayImg = product.img || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80";
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (product.stockQuantity > 0) {
+      animateFlyToCart(e, displayImg);
       addToCart(product);
       showToast(`Đã thêm ${product.name} vào giỏ hàng`);
     } else {
@@ -49,8 +53,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
     setLiked(l => !l);
     showToast(liked ? "Đã xóa khỏi yêu thích" : "Đã thêm vào yêu thích", "info");
   };
-
-  const displayImg = product.img || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80";
 
   const discount = (product.originalPrice && product.originalPrice > product.price)
     ? Math.round((1 - product.price / product.originalPrice) * 100)

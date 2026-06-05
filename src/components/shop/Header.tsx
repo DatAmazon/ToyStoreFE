@@ -3,12 +3,46 @@ import { Search, ShoppingCart, User, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import AuthModal from "./AuthModal";
 import CartDrawer from "./CartDrawer";
+import { useCart } from "@/api/CartContext";
 
-const Header = () => {
+interface HeaderProps {
+  onSearch?: (keyword: string) => void;
+}
+
+const Header = ({ onSearch }: HeaderProps) => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tất cả");
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
+
+  const { cartItems } = useCart();
+  const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  const handleSearch = () => {
+    // Hiệu ứng nháy nút
+    setIsClicked(true);
+    setTimeout(() => setIsClicked(false), 200);
+
+    // Hiệu ứng thanh progress
+    setIsSearching(true);
+    
+    if (onSearch) {
+      onSearch(search);
+    }
+
+    // Giả lập hoặc đợi tìm kiếm xong (ở đây ta cho chạy 800ms để người dùng thấy progress)
+    setTimeout(() => {
+      setIsSearching(false);
+    }, 800);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   const categories = [
     "Tất cả", "Đồ nhà bếp", "Nội thất", "Vật dụng phòng tắm",
@@ -25,30 +59,43 @@ const Header = () => {
           <span className="text-primary text-xl">◆</span>
         </a>
 
-        {/* Search bar */}
-        <div className="flex-1 flex max-w-2xl">
-          <div className="relative">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="h-10 pl-3 pr-8 border border-border border-r-0 rounded-l-md bg-secondary text-foreground text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+        {/* Search bar container */}
+        <div className="flex-1 flex flex-col max-w-2xl relative">
+          <div className="flex">
+            <div className="relative">
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="h-10 pl-3 pr-8 border border-border border-r-0 rounded-l-md bg-secondary text-foreground text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            </div>
+            <input
+              type="text"
+              placeholder="Từ khóa tìm kiếm..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 h-10 px-4 border border-border border-x-0 bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+            />
+            <button 
+              onClick={handleSearch}
+              className={`h-10 px-5 bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-semibold rounded-r-md transition-all active:scale-95 ${isClicked ? 'brightness-125 scale-105' : ''}`}
             >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Search className={`h-4 w-4 transition-transform ${isClicked ? 'rotate-12' : ''}`} />
+            </button>
           </div>
-          <input
-            type="text"
-            placeholder="Từ khóa tìm kiếm..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 h-10 px-4 border border-border border-x-0 bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-          />
-          <button className="h-10 px-5 bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-semibold rounded-r-md transition-colors">
-            <Search className="h-4 w-4" />
-          </button>
+
+          {/* Progress bar nhỏ ngay dưới ô tìm kiếm */}
+          <div className="absolute -bottom-1 left-0 right-0 h-0.5 overflow-hidden rounded-full">
+            {isSearching && (
+              <div className="h-full bg-primary animate-progress-loading w-full origin-left" />
+            )}
+          </div>
         </div>
 
         {/* Account & Cart */}
@@ -61,14 +108,17 @@ const Header = () => {
             <span className="text-xs hidden md:block">Tài khoản</span>
           </button>
           <button 
+            id="cart-icon"
             onClick={() => setIsCartOpen(true)}
             className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors relative"
           >
             <div className="relative">
               <ShoppingCart className="h-5 w-5" />
-              <Badge className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
-                2
-              </Badge>
+              {totalCartItems > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground border-none">
+                  {totalCartItems > 99 ? '99+' : totalCartItems}
+                </Badge>
+              )}
             </div>
             <span className="text-xs hidden md:block">Giỏ hàng</span>
           </button>

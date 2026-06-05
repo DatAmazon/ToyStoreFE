@@ -72,7 +72,9 @@ const CategorySidebar = ({ className = "" }: CategorySidebarProps) => {
       {/* Contact buttons */}
       <div className="p-3 space-y-2 border-t border-border bg-secondary/50">
         <a
-          href="#"
+          href="https://zalo.me/0985846590"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-full bg-[#0068ff] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
         >
           <MessageCircle className="h-3.5 w-3.5" />

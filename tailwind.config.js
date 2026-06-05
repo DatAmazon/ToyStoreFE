@@ -12,6 +12,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          dark: "hsl(var(--brand-pink-dark))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -56,6 +57,31 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "progress-loading": {
+          "0%": { transform: "translateX(-100%)" },
+          "50%": { transform: "translateX(-30%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "slide-in-from-right": {
+          "0%": { transform: "translateX(1rem)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
+        },
+        "zoom-in": {
+          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+      },
+      animation: {
+        "progress-loading": "progress-loading 0.8s ease-in-out forwards",
+        "fade-in": "fade-in 0.5s ease-out forwards",
+        "slide-in-from-right": "slide-in-from-right 0.5s ease-out forwards",
+        "zoom-in": "zoom-in 0.5s ease-out forwards",
       },
     },
   },
