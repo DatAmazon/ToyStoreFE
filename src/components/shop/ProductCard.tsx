@@ -1,16 +1,18 @@
 import { ShoppingCart, Heart, Star } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useCart } from "@/api/CartContext";
+import { useToast } from "@/components/ui/Toast";
 
 interface Product {
-  id: string; // GUID từ .NET là string
+  id: string; 
   name: string;
   price: number;
-  originalPrice?: number | null; // Cần trường này để tính discount
+  originalPrice?: number | null;
   stockQuantity: number;
   minimumAge: number;
   manufacturer: string;
   categoryName: string;
-  // Các trường sau API chưa có, bạn có thể để optional (?) hoặc bổ sung sau
   img?: string | null;
   rating?: number | null;
   reviews?: number | null;
@@ -27,23 +29,41 @@ const formatPrice = (price: number) =>
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const [liked, setLiked] = useState(false);
+  const { addToCart } = useCart();
+  const { showToast } = useToast();
 
-  // LOGIC NGHIỆP VỤ MỚI:
-  // 1. Xử lý ảnh mặc định nếu API trả về null
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (product.stockQuantity > 0) {
+      addToCart(product);
+      showToast(`Đã thêm ${product.name} vào giỏ hàng`);
+    } else {
+      showToast("Sản phẩm hiện đang hết hàng", "error");
+    }
+  };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setLiked(l => !l);
+    showToast(liked ? "Đã xóa khỏi yêu thích" : "Đã thêm vào yêu thích", "info");
+  };
+
   const displayImg = product.img || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80";
 
-  // 2. Tính % giảm giá an toàn (tránh chia cho 0 hoặc lỗi khi không có originalPrice)
   const discount = (product.originalPrice && product.originalPrice > product.price)
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : null;
 
-  // 3. Xử lý Rating mặc định nếu API trả về null
   const currentRating = product.rating ?? 0;
   const currentReviews = product.reviews ?? 0;
 
   return (
-    <div className="product-card bg-card rounded-lg overflow-hidden border border-border group cursor-pointer">
-      {/* Image container */}
+    <Link 
+      to={`/product/${product.id}`}
+      className="product-card bg-card rounded-lg overflow-hidden border border-border group cursor-pointer h-full flex flex-col"
+    >
       <div className="relative aspect-square overflow-hidden bg-secondary">
         <img
           src={displayImg}
@@ -51,7 +71,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
 
-        {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.badge && (
             <span
@@ -60,7 +79,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
               {product.badge}
             </span>
           )}
-          {/* Tự động hiện Badge Hết hàng nếu stockQuantity bằng 0 */}
           {product.stockQuantity <= 0 && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-destructive text-white">
               Hết hàng
@@ -73,36 +91,31 @@ const ProductCard = ({ product }: ProductCardProps) => {
           )}
         </div>
 
-        {/* Wishlist */}
         <button
-          onClick={(e) => {
-            e.stopPropagation(); // Ngăn chặn sự kiện click lan ra ngoài thẻ card
-            setLiked(l => !l);
-          }}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card"
+          onClick={handleWishlist}
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card z-10"
         >
           <Heart
             className={`h-3.5 w-3.5 transition-colors ${liked ? "text-primary fill-primary" : "text-muted-foreground"}`}
           />
         </button>
 
-        {/* Add to cart overlay */}
-        <div className="absolute bottom-0 left-0 right-0 py-2 px-3 bg-primary text-primary-foreground text-xs font-semibold text-center translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-1.5">
+        <button 
+          onClick={handleAddToCart}
+          className="absolute bottom-0 left-0 right-0 py-2.5 px-3 bg-primary text-primary-foreground text-xs font-semibold text-center translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-1.5 w-full hover:bg-primary-dark z-10"
+        >
           <ShoppingCart className="h-3.5 w-3.5" />
           {product.stockQuantity > 0 ? "Thêm vào giỏ hàng" : "Liên hệ"}
-        </div>
+        </button>
       </div>
 
-      {/* Info */}
-      <div className="p-3">
-        {/* Tên nhà sản xuất nhỏ ở trên */}
+      <div className="p-3 flex-1 flex flex-col">
         <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{product.manufacturer}</p>
         
         <h3 className="text-sm font-medium text-foreground line-clamp-2 mb-1.5 group-hover:text-primary transition-colors leading-snug h-10">
           {product.name}
         </h3>
 
-        {/* Rating */}
         <div className="flex items-center gap-1 mb-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
@@ -113,18 +126,16 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <span className="text-xs text-muted-foreground ml-1">({currentReviews})</span>
         </div>
 
-        {/* Price */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-auto">
           <span className="text-primary font-bold text-base">{formatPrice(product.price)}</span>
           {product.originalPrice && product.originalPrice > product.price && (
             <span className="text-muted-foreground text-xs line-through">{formatPrice(product.originalPrice)}</span>
           )}
         </div>
         
-        {/* Thông tin bổ sung: Độ tuổi phù hợp */}
         <p className="text-[10px] text-muted-foreground mt-2">Độ tuổi: {product.minimumAge}+</p>
       </div>
-    </div>
+    </Link>
   );
 };
 

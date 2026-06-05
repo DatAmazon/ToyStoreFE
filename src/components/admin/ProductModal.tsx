@@ -211,7 +211,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
               <input 
                 required
                 type="number" 

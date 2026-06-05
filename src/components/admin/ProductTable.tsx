@@ -19,7 +19,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, onDelete 
               <th className="px-8 py-5 font-semibold">Product Name</th>
               <th className="px-8 py-5 font-semibold">Category</th>
               <th className="px-8 py-5 font-semibold text-right">Price</th>
-              <th className="px-8 py-5 font-semibold text-center">Stock</th>
+              <th className="px-8 py-5 font-semibold text-center">Stock Quantity</th>
               <th className="px-8 py-5 font-semibold text-center">Actions</th>
             </tr>
           </thead>

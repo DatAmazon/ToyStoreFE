@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { Search, ShoppingCart, User, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import AuthModal from "./AuthModal";
+import CartDrawer from "./CartDrawer";
 
 const Header = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tất cả");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const categories = [
     "Tất cả", "Đồ nhà bếp", "Nội thất", "Vật dụng phòng tắm",
@@ -49,21 +53,37 @@ const Header = () => {
 
         {/* Account & Cart */}
         <div className="flex items-center gap-5 ml-auto">
-          <a href="#" className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors">
+          <button 
+            onClick={() => setIsAuthModalOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors"
+          >
             <User className="h-5 w-5" />
             <span className="text-xs hidden md:block">Tài khoản</span>
-          </a>
-          <a href="#" className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors relative">
+          </button>
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors relative"
+          >
             <div className="relative">
               <ShoppingCart className="h-5 w-5" />
               <Badge className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
-                0
+                2
               </Badge>
             </div>
             <span className="text-xs hidden md:block">Giỏ hàng</span>
-          </a>
+          </button>
         </div>
       </div>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
+
+      <CartDrawer 
+        isOpen={isCartOpen} 
+        onClose={() => setIsCartOpen(false)} 
+      />
     </div>
   );
 };
