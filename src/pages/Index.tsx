@@ -27,10 +27,12 @@ const Index = () => {
       <main className="flex-1">
         <div className="container mx-auto py-4 space-y-8">
           {/* Hero section: sidebar + banner */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-start relative">
             {/* Category sidebar - hidden on mobile */}
-            <aside className="w-56 flex-shrink-0 hidden lg:block">
-              <CategorySidebar />
+            <aside className="w-56 flex-shrink-0 hidden lg:block self-stretch relative">
+              <div className="absolute inset-0">
+                <CategorySidebar />
+              </div>
             </aside>
 
             {/* Hero banner */}

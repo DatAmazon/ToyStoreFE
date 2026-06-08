@@ -79,9 +79,9 @@ const FeaturedProducts = ({ keyword = "" }: FeaturedProductsProps) => {
         total = data.length;
       }
 
-      const mappedProducts = data.map((p: any) => ({
+      const mappedProducts = data.map((p: any, index: number) => ({
         ...p,
-        id: p.id?.toString(),
+        id: (p.id || `product-${index}`).toString(),
         name: p.name || "Sản phẩm đồ chơi",
         price: p.price || 0,
         img: p.imageUrl || p.img || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",

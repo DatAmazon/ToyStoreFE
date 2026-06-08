@@ -6,6 +6,20 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+// Thêm interceptor để gắn Token vào mỗi request
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Thêm interceptor để xử lý response tập trung
 api.interceptors.response.use(
   (response) => {

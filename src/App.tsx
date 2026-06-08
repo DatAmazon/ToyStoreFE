@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import ProductManagement from './pages/ProductManagement';
 import CategoryManagement from './pages/CategoryManagement';
+import OrderManagement from './pages/OrderManagement';
 import Index from './pages/Index';
 import AboutPage from './pages/AboutPage';
 import ProductsPage from './pages/ProductsPage';
@@ -30,6 +31,9 @@ function App() {
 
             {/* Trang Quản lý Danh mục */}
             <Route path="/admin/categories" element={<CategoryManagement />} />
+
+            {/* Trang Quản lý Đơn hàng */}
+            <Route path="/admin/orders" element={<OrderManagement />} />
           </Routes>
         </CartProvider>
       </ToastProvider>

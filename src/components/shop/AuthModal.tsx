@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
+import { loginApi, registerApi } from '@/api/authApi';
+import { useToast } from '@/components/ui/Toast';
 import './AuthModal.css';
 
 interface AuthModalProps {
@@ -11,8 +13,57 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    userName: '',
+    fullName: ''
+  });
 
   const togglePassword = () => setShowPassword(!showPassword);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const response = await loginApi({
+          email: formData.email,
+          password: formData.password
+        });
+        
+        const { token, id, role, fullName } = response.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('userId', id);
+        localStorage.setItem('userRole', role || 'User');
+        localStorage.setItem('userName', fullName || formData.email);
+
+        showToast("Đăng nhập thành công!", "success");
+        onClose();
+        window.location.reload();
+      } else {
+        await registerApi({
+          email: formData.email,
+          userName: formData.userName,
+          fullName: formData.fullName,
+          password: formData.password
+        });
+        showToast("Đăng ký thành công! Vui lòng đăng nhập.", "success");
+        setIsLogin(true);
+      }
+    } catch (error: any) {
+      showToast(error.message || "Có lỗi xảy ra, vui lòng thử lại!", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal 
@@ -25,7 +76,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {isLogin ? 'ĐĂNG NHẬP' : 'ĐĂNG KÝ'}
         </h2>
 
-        {/* Social Login Buttons */}
         <div className="flex gap-4 mb-8">
           <button className="auth-social-btn">
             <GoogleIcon />
@@ -37,7 +87,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Divider */}
         <div className="auth-divider">
           <div className="auth-divider-line"></div>
           <span className="auth-divider-text">
@@ -45,21 +94,55 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </span>
         </div>
 
-        {/* Form */}
-        <form className="space-y-2" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {!isLogin && (
+            <>
+              <div className="auth-modal-input-group">
+                <input
+                  required
+                  type="text"
+                  name="fullName"
+                  placeholder="Họ và tên"
+                  className="auth-modal-input"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="auth-modal-input-group">
+                <input
+                  required
+                  type="text"
+                  name="userName"
+                  placeholder="Tên tài khoản"
+                  className="auth-modal-input"
+                  value={formData.userName}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </>
+          )}
+          
           <div className="auth-modal-input-group">
             <input
-              type="text"
-              placeholder="Tài khoản"
+              required
+              type="email"
+              name="email"
+              placeholder="Email"
               className="auth-modal-input"
+              value={formData.email}
+              onChange={handleInputChange}
             />
           </div>
           
           <div className="auth-modal-input-group">
             <input
+              required
               type={showPassword ? "text" : "password"}
+              name="password"
               placeholder="Mật khẩu"
               className="auth-modal-input pr-10"
+              value={formData.password}
+              onChange={handleInputChange}
             />
             <button
               type="button"
@@ -70,13 +153,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
 
-          <div className="flex justify-start py-2">
-            <a href="#" className="text-[#555555] text-[13px] hover:text-[#E5528F] transition-colors font-medium">
-              Quên mật khẩu?
-            </a>
-          </div>
+          {isLogin && (
+            <div className="flex justify-start py-2">
+              <a href="#" className="text-[#555555] text-[13px] hover:text-[#E5528F] transition-colors font-medium">
+                Quên mật khẩu?
+              </a>
+            </div>
+          )}
 
-          <button type="submit" className="auth-submit-btn">
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="auth-submit-btn flex items-center justify-center gap-2"
+          >
+            {loading && <Loader2 className="animate-spin" size={18} />}
             {isLogin ? 'ĐĂNG NHẬP' : 'TẠO TÀI KHOẢN'}
           </button>
 
@@ -95,7 +185,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-// Icons as sub-components for cleaner JSX
 const GoogleIcon = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24">
     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

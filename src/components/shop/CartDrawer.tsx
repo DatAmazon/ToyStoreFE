@@ -13,34 +13,86 @@ interface CartDrawerProps {
 
 type Step = 'cart' | 'checkout' | 'success';
 
+import { checkout, CheckoutPayload } from '@/api/orderApi';
+
 const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<Step>('cart');
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank'>('cod');
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     address: ''
   });
 
-  const { cartItems, updateQuantity, removeFromCart, clearCart, subtotal } = useCart();
+  const { 
+    cartItems, 
+    updateQuantity, 
+    removeFromCart, 
+    clearCart, 
+    subtotal,
+    totalSelected,
+    toggleSelectItem,
+    toggleSelectAll,
+    setCartItems // Cần thêm hàm này vào CartContext hoặc dùng cách khác để xóa từng món
+  } = useCart() as any; 
   const { showToast } = useToast();
+
+  const isAllSelected = cartItems.length > 0 && cartItems.every((item: any) => item.selected);
+  const selectedCount = cartItems.filter((item: any) => item.selected).length;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const qrUrl = `https://img.vietqr.io/image/MB-123456789-compact2.png?amount=${subtotal}&addInfo=THANH TOAN DON HANG ${formData.phone || ''}&accountName=TOY STORE MANAGEMENT`;
+  const qrUrl = `https://img.vietqr.io/image/MB-123456789-compact2.png?amount=${totalSelected}&addInfo=THANH TOAN DON HANG ${formData.phone || ''}&accountName=TOY STORE MANAGEMENT`;
 
-  const handleCompleteOrder = () => {
+  const handleCompleteOrder = async () => {
     if (!formData.name || !formData.phone || !formData.address) {
       showToast("Vui lòng nhập đầy đủ thông tin giao hàng!", "error");
       return;
     }
-    setStep('success');
-    showToast("Đặt hàng thành công! Cảm ơn bạn.", "success");
-    clearCart();
+
+    const selectedItems = cartItems.filter((item: any) => item.selected);
+    if (selectedItems.length === 0) {
+      showToast("Vui lòng chọn ít nhất một sản phẩm để thanh toán!", "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload: CheckoutPayload = {
+        customerId: localStorage.getItem('userId') || null,
+        customerName: formData.name,
+        customerPhone: formData.phone,
+        shippingAddress: formData.address,
+        discount: 0,
+        items: selectedItems.map((item: any) => ({
+          productId: item.id,
+          quantity: item.quantity
+        }))
+      };
+
+      await checkout(payload);
+      
+      setStep('success');
+      showToast("Đặt hàng thành công! Cảm ơn bạn.", "success");
+      
+      // Xóa những món đã thanh toán khỏi giỏ hàng
+      if (typeof setCartItems === 'function') {
+        setCartItems((prev: any[]) => prev.filter(item => !item.selected));
+      } else {
+        // Fallback nếu không có setCartItems (nên cập nhật CartContext)
+        clearCart(); 
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi đặt hàng:", error);
+      showToast(error.message || "Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetAndClose = () => {
@@ -63,13 +115,36 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             cartItems.length > 0 ? (
               <>
                 <div className="cart-items-container">
-                  <div className="flex items-center gap-2 py-2 mb-2">
+                  <div className="flex items-center justify-between py-2 mb-2">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          type="checkbox" 
+                          checked={isAllSelected}
+                          onChange={(e) => toggleSelectAll(e.target.checked)}
+                          className="peer appearance-none w-4 h-4 border-2 border-primary/30 rounded-md checked:bg-primary checked:border-primary transition-all"
+                        />
+                        <CheckCircle2 size={10} className="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground group-hover:text-primary transition-colors">Chọn tất cả</span>
+                    </label>
                     <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      {cartItems.length} sản phẩm
+                      {selectedCount}/{cartItems.length} sản phẩm
                     </span>
                   </div>
                   {cartItems.map((item) => (
-                    <div key={item.id} className="cart-item-card animate-slide-in-from-right">
+                    <div key={item.id} className={`cart-item-card animate-slide-in-from-right ${item.selected ? 'border-primary/20 bg-primary/5' : ''}`}>
+                      <div className="flex items-center pr-1">
+                        <div className="relative flex items-center justify-center">
+                          <input 
+                            type="checkbox" 
+                            checked={item.selected}
+                            onChange={() => toggleSelectItem(item.id)}
+                            className="peer appearance-none w-4 h-4 border-2 border-primary/20 rounded-md checked:bg-primary checked:border-primary transition-all cursor-pointer"
+                          />
+                          <CheckCircle2 size={10} className="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                        </div>
+                      </div>
                       <div className="cart-item-image-wrapper">
                         <img src={item.image} alt={item.name} className="cart-item-image" />
                       </div>
@@ -107,8 +182,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                 <div className="cart-summary-footer">
                   <div className="space-y-2.5">
                     <div className="summary-row">
-                      <span className="summary-label">Tạm tính</span>
-                      <span className="summary-value text-foreground/80">{subtotal.toLocaleString('vi-VN')}₫</span>
+                      <span className="summary-label">Tạm tính ({selectedCount} món)</span>
+                      <span className="summary-value text-foreground/80">{totalSelected.toLocaleString('vi-VN')}₫</span>
                     </div>
                     <div className="summary-row">
                       <span className="summary-label">Phí vận chuyển</span>
@@ -116,12 +191,16 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                     </div>
                     <div className="summary-total-row">
                       <span className="summary-total-label">Tổng cộng</span>
-                      <span className="summary-total-price">{subtotal.toLocaleString('vi-VN')}₫</span>
+                      <span className="summary-total-price">{totalSelected.toLocaleString('vi-VN')}₫</span>
                     </div>
                   </div>
                   
-                  <button onClick={() => setStep('checkout')} className="modern-checkout-btn group">
-                    Tiến hành đặt hàng
+                  <button 
+                    onClick={() => setStep('checkout')} 
+                    disabled={selectedCount === 0}
+                    className="modern-checkout-btn group disabled:opacity-50 disabled:grayscale"
+                  >
+                    Tiến hành đặt hàng ({selectedCount})
                     <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                   <button onClick={onClose} className="modern-secondary-btn">

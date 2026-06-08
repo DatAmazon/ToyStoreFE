@@ -52,6 +52,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, onSubmit
             <input 
               required
               type="text" 
+              minLength={2}
               value={formData.categoryName}
               onChange={(e) => setFormData({ ...formData, categoryName: e.target.value })}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"

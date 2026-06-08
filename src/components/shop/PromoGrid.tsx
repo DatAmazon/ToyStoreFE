@@ -1,47 +1,78 @@
-const promos = [
-  {
-    id: 1,
-    title: "Đồ Nội Thất",
-    subtitle: "Phong cách Scandinavian",
-    img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80",
-    color: "from-amber-400/80 to-orange-500/80",
-  },
-  {
-    id: 2,
-    title: "Đồ Dùng Bếp",
-    subtitle: "Đầu bếp chuyên nghiệp tại nhà",
-    img: "https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=600&q=80",
-    color: "from-pink-400/80 to-rose-600/80",
-  },
-  {
-    id: 3,
-    title: "Vật Dụng Phòng Tắm",
-    subtitle: "Cao cấp & tiện nghi",
-    img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80",
-    color: "from-teal-400/80 to-cyan-600/80",
-  },
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import api from "@/api/api";
+
+interface Product {
+  id: string | number;
+  name: string;
+  imageUrl?: string;
+  price: number;
+  categoryName?: string;
+}
+
+const colors = [
+  "from-amber-400/80 to-orange-500/80",
+  "from-pink-400/80 to-rose-600/80",
+  "from-teal-400/80 to-cyan-600/80",
 ];
 
 const PromoGrid = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPromotedProducts = async () => {
+      try {
+        const response = await api.get("/api/Products?pageSize=3&pageNumber=1");
+        // Lấy data từ response (đã qua interceptor nên response.data là mảng sản phẩm)
+        const data = Array.isArray(response.data) ? response.data : [];
+        setProducts(data.slice(0, 3));
+      } catch (error) {
+        console.error("Lỗi khi tải sản phẩm khuyến mãi:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPromotedProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="aspect-[4/3] bg-secondary animate-pulse rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (products.length === 0) return null;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      {promos.map((promo) => (
-        <a
-          key={promo.id}
-          href="#"
+      {products.map((product, index) => (
+        <Link
+          key={product.id}
+          to={`/product/${product.id}`}
           className="relative overflow-hidden rounded-lg aspect-[4/3] group shadow-card hover:shadow-card-hover transition-shadow"
         >
           <img
-            src={promo.img}
-            alt={promo.title}
+            src={product.imageUrl || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80"}
+            alt={product.name}
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
-          <div className={`absolute inset-0 bg-gradient-to-b ${promo.color} opacity-60`} />
+          <div className={`absolute inset-0 bg-gradient-to-b ${colors[index % colors.length]} opacity-60`} />
           <div className="absolute inset-0 flex flex-col justify-end p-4">
-            <h3 className="text-white font-bold text-base leading-tight">{promo.title}</h3>
-            <p className="text-white/80 text-xs mt-0.5">{promo.subtitle}</p>
+            <span className="text-white/90 text-[10px] uppercase font-bold tracking-wider mb-1">
+              {product.categoryName || "Sản phẩm mới"}
+            </span>
+            <h3 className="text-white font-bold text-base leading-tight line-clamp-2">{product.name}</h3>
+            <p className="text-white text-sm font-black mt-1">
+              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
+            </p>
           </div>
-        </a>
+        </Link>
       ))}
     </div>
   );

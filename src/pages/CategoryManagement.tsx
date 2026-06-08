@@ -30,14 +30,17 @@ const CategoryManagement = () => {
   };
 
   useEffect(() => {
-    fetchCategories();
+    fetchCategories();  
   }, []);
 
   const handleAddCategory = async (category: Category) => {
     try {
-      await api.post(API_ENDPOINT, {
-        CategoryName: category.categoryName
-      });
+      // Gửi một mảng object theo yêu cầu của API bulk create
+      await api.post(`${API_ENDPOINT}/Create`, [
+        {
+          CategoryName: category.categoryName
+        }
+      ]);
       fetchCategories();
       setIsModalOpen(false);
     } catch (error) {

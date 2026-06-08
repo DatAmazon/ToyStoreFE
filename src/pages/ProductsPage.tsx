@@ -16,6 +16,7 @@ const ProductsPage = () => {
   
   // States cho lọc
   const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
+  const [categoryName, setCategoryName] = useState(searchParams.get("category") || "");
   const [minPrice, setMinPrice] = useState<string>(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState<string>(searchParams.get("maxPrice") || "");
   const [sortOrder, setSortOrder] = useState<string>(searchParams.get("sortOrder") || "");
@@ -23,11 +24,21 @@ const ProductsPage = () => {
   const [pageSize, setPageSize] = useState(Number(searchParams.get("pageSize")) || 12);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Đồng bộ category từ URL khi nó thay đổi (ví dụ nhấn từ Sidebar)
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat !== null) {
+      setCategoryName(cat);
+      setPageNumber(1);
+    }
+  }, [searchParams]);
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (keyword) params.append("keyword", keyword);
+      if (categoryName) params.append("categoryName", categoryName);
       if (minPrice) params.append("minPrice", minPrice);
       if (maxPrice) params.append("maxPrice", maxPrice);
       if (sortOrder) params.append("sortOrder", sortOrder);
@@ -47,9 +58,9 @@ const ProductsPage = () => {
         total = data.length; // Dự phòng
       }
 
-      const mappedProducts = data.map((p: any) => ({
+      const mappedProducts = data.map((p: any, index: number) => ({
         ...p,
-        id: p.id?.toString(),
+        id: (p.id || `product-${index}`).toString(),
         name: p.name || "Sản phẩm đồ chơi",
         price: p.price || 0,
         img: p.imageUrl || p.img || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
@@ -76,11 +87,12 @@ const ProductsPage = () => {
     // Cập nhật URL khi params thay đổi
     const newParams: any = { pageNumber, pageSize };
     if (keyword) newParams.keyword = keyword;
+    if (categoryName) newParams.category = categoryName;
     if (minPrice) newParams.minPrice = minPrice;
     if (maxPrice) newParams.maxPrice = maxPrice;
     if (sortOrder) newParams.sortOrder = sortOrder;
     setSearchParams(newParams);
-  }, [pageNumber, pageSize, keyword, minPrice, maxPrice, sortOrder]);
+  }, [pageNumber, pageSize, keyword, categoryName, minPrice, maxPrice, sortOrder]);
 
   const handleApplyFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +103,7 @@ const ProductsPage = () => {
 
   const handleClearFilter = () => {
     setKeyword("");
+    setCategoryName("");
     setMinPrice("");
     setMaxPrice("");
     setSortOrder("");

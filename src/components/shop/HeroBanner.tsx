@@ -1,38 +1,46 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import graduateImg from "@/assets/images/graduate.png";
+import doctorImg from "@/assets/images/doctor.png";
+import weddingImg from "@/assets/images/wedding.png";
 
 const banners = [
   {
     id: 1,
-    title: "Đồ Gia Dụng Cao Cấp",
-    subtitle: "Không gian sống hoàn hảo cho gia đình bạn",
-    cta: "Mua ngay",
-    bg: "from-rose-400 to-pink-600",
-    img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80",
-    badge: "Ưu đãi đến 50%",
+    title: "Móc Len Tốt Nghiệp Ý Nghĩa",
+    subtitle: "Gấu cử nhân len - món quà đánh dấu mốc quan trọng trong cuộc đời",
+    cta: "Đặt làm ngay",
+    bg: "from-blue-600/20 to-indigo-900/20",
+    img: graduateImg, 
+    badge: "Gấu cử nhân len",
+    path: "/products?keyword=Gấu cử nhân"
   },
   {
     id: 2,
-    title: "Bộ Nội Thất Phòng Bếp",
-    subtitle: "Nấu ăn ngon hơn với thiết bị hiện đại",
-    cta: "Khám phá ngay",
-    bg: "from-orange-400 to-red-500",
-    img: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=800&q=80",
-    badge: "Hàng mới về",
+    title: "Bác Sĩ & Y Tá Móc Len",
+    subtitle: "Búp bê len bác sĩ - món quà tri ân tinh tế cho những nỗ lực thầm lặng",
+    cta: "Xem chi tiết",
+    bg: "from-teal-600/20 to-emerald-900/20",
+    img: doctorImg,
+    badge: "Búp bê bác sĩ len",
+    path: "/products?keyword=Bác sĩ"
   },
   {
     id: 3,
-    title: "Thiết Bị Điện Gia Dụng",
-    subtitle: "Công nghệ tiên tiến, tiết kiệm điện năng",
-    cta: "Xem sản phẩm",
-    bg: "from-teal-400 to-cyan-600",
-    img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
-    badge: "Giảm 30%",
+    title: "Cặp Đôi Thỏ Cưới Móc Len",
+    subtitle: "Thỏ cưới len - biểu tượng hạnh phúc vĩnh cửu cho ngày trọng đại",
+    cta: "Khám phá ngay",
+    bg: "from-rose-500/20 to-pink-900/20",
+    img: weddingImg,
+    badge: "Cặp đôi thỏ cưới",
+    path: "/products?keyword=Thỏ cưới"
   },
 ];
 
 const HeroBanner = () => {
   const [current, setCurrent] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -55,22 +63,25 @@ const HeroBanner = () => {
         className="absolute inset-0 w-full h-full object-cover slide-in"
       />
 
-      {/* Gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-r ${banner.bg} opacity-70`} />
+      {/* Gradient overlay - Reduced opacity for clarity */}
+      <div className={`absolute inset-0 bg-gradient-to-r ${banner.bg} opacity-30`} />
 
       {/* Content */}
-      <div className="absolute inset-0 flex items-center px-10">
-        <div key={banner.id} className="text-white fade-in">
+      <div className="absolute inset-0 flex items-center pl-20 pr-10">
+        <div key={banner.id} className="text-white fade-in drop-shadow-xl">
           <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold rounded-full mb-3 badge-pulse">
             {banner.badge}
           </span>
-          <h2 className="text-2xl md:text-4xl font-black mb-2 drop-shadow-md leading-tight">
+          <h2 className="text-2xl md:text-4xl font-black mb-2 text-primary drop-shadow-md leading-tight">
             {banner.title}
           </h2>
-          <p className="text-white/85 text-sm md:text-base mb-5 max-w-xs">
+          <p className="text-primary font-medium text-sm md:text-base mb-5 max-w-xs drop-shadow-sm">
             {banner.subtitle}
           </p>
-          <button className="px-6 py-2.5 bg-white text-primary font-bold text-sm rounded-full hover:bg-primary hover:text-white transition-all duration-300 shadow-lg">
+          <button 
+            onClick={() => navigate(banner.path)}
+            className="px-6 py-2.5 bg-white text-primary font-bold text-sm rounded-full hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
+          >
             {banner.cta}
           </button>
         </div>

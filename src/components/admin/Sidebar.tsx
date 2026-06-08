@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Box, Layers, UserSquare2, WalletCards, BadgePercent, HelpCircle, ChevronRight, Menu, X, Home } from 'lucide-react';
+import { LayoutDashboard, Box, Layers, UserSquare2, WalletCards, BadgePercent, HelpCircle, ChevronRight, Menu, X, Home, ShoppingCart } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
@@ -10,6 +10,7 @@ const Sidebar = () => {
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin' },
     { icon: <Box size={20} />, label: 'Product', path: '/admin/products' },
     { icon: <Layers size={20} />, label: 'Category', path: '/admin/categories' },
+    { icon: <ShoppingCart size={20} />, label: 'Orders', path: '/admin/orders' },
     { icon: <UserSquare2 size={20} />, label: 'Customers' },
     { icon: <WalletCards size={20} />, label: 'Income', hasArrow: true },
     { icon: <BadgePercent size={20} />, label: 'Promote', hasArrow: true },

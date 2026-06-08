@@ -4,6 +4,40 @@ Bộ câu hỏi và câu trả lời giúp nắm vững toàn bộ kiến trúc,
 
 ---
 
+## LUỒNG CHƯƠNG TRÌNH (PROGRAM FLOW)
+
+Dưới đây là sơ đồ luồng chạy chính của ứng dụng từ lúc khởi tạo đến khi hiển thị giao diện:
+
+1.  **Entry Point (HTML) - `index.html`**: 
+    - Là file đầu tiên trình duyệt đọc.
+    - Chứa thẻ `<div id="root"></div>` nơi ứng dụng React sẽ được "gắn" vào.
+    - Gọi file `src/main.tsx` để bắt đầu thực thi code JavaScript.
+
+2.  **Main Entry (TypeScript) - `src/main.tsx`**: 
+    - Là điểm vào của mã nguồn TypeScript.
+    - Khởi tạo React DOM và render Component gốc là `<App />` vào phần tử `#root` trong HTML.
+    - Nạp các file CSS toàn cục (`index.css`).
+
+3.  **App Root & Routing - `src/App.tsx`**: 
+    - Đóng vai trò là "Tổng đài điều hướng".
+    - Sử dụng `react-router-dom` để định nghĩa các đường dẫn (Routes) như `/`, `/products`, `/admin`, v.v.
+    - Bọc toàn bộ ứng dụng trong các **Providers** (`CartProvider`, `ToastProvider`) để quản lý trạng thái giỏ hàng và thông báo toàn cục.
+
+4.  **Pages (Trang giao diện) - `src/pages/`**: 
+    - Dựa vào URL trên trình duyệt, Router sẽ quyết định hiển thị trang nào (ví dụ: `Index.tsx` cho trang chủ, `ProductsPage.tsx` cho danh sách sản phẩm).
+    - Mỗi trang trong thư mục này sẽ gọi các Components và API tương ứng.
+
+5.  **Components (Thành phần UI) - `src/components/`**: 
+    - Các mảnh giao diện nhỏ (Header, Footer, ProductCard, v.v.) được tổ chức trong thư mục này.
+    - Được chia thành `shop` (cho khách hàng), `admin` (cho quản trị viên) và `ui` (các thành phần dùng chung).
+
+6.  **Data & State Management - `src/api/` & `src/lib/`**: 
+    - `api.ts`: Chứa cấu hình Axios để gọi dữ liệu từ Backend.
+    - `CartContext.tsx`: Quản lý logic giỏ hàng (thêm/xóa/sửa sản phẩm) xuyên suốt toàn bộ ứng dụng.
+    - `utils.ts`: Chứa các hàm hỗ trợ như định dạng tiền tệ, xử lý class CSS.
+
+---
+
 ## PHẦN 1: TỔNG QUAN & KIẾN TRÚC DỰ ÁN (1-10)
 
 **1. Dự án được xây dựng dựa trên công nghệ cốt lõi nào?**
