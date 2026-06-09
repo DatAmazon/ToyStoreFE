@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, ShoppingCart, User, ChevronDown } from "lucide-react";
+import { Search, ShoppingCart, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Logo from "@/components/ui/Logo";
 import AuthModal from "./AuthModal";
@@ -13,8 +13,6 @@ interface HeaderProps {
 
 const Header = ({ onSearch }: HeaderProps) => {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("Tất cả");
-  const [categories, setCategories] = useState<string[]>(["Tất cả"]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -22,21 +20,6 @@ const Header = ({ onSearch }: HeaderProps) => {
 
   const { cartItems } = useCart();
   const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await api.get("/api/Categories/GetAll");
-        const data = Array.isArray(response.data) ? response.data : [];
-        const names = data.map((c: any) => c.categoryName);
-        setCategories(["Tất cả", ...names]);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh mục:", error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
 
   const handleSearch = () => {
     // Hiệu ứng nháy nút
@@ -47,12 +30,10 @@ const Header = ({ onSearch }: HeaderProps) => {
     setIsSearching(true);
     
     if (onSearch) {
-      // Nếu có chọn danh mục cụ thể, ta có thể kết hợp vào keyword hoặc xử lý riêng
-      // Ở đây ta đơn giản là gửi keyword lên
       onSearch(search);
     }
 
-    // Giả lập hoặc đợi tìm kiếm xong (ở đây ta cho chạy 800ms để người dùng thấy progress)
+    // Giả lập hoặc đợi tìm kiếm xong
     setTimeout(() => {
       setIsSearching(false);
     }, 800);
@@ -75,25 +56,13 @@ const Header = ({ onSearch }: HeaderProps) => {
         {/* Search bar container */}
         <div className="flex-1 flex flex-col max-w-2xl relative">
           <div className="flex">
-            <div className="relative">
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="h-10 pl-3 pr-8 border border-border border-r-0 rounded-l-md bg-secondary text-foreground text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary min-w-[120px]"
-              >
-                {categories.map((cat, index) => (
-                  <option key={`${cat}-${index}`} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            </div>
             <input
               type="text"
               placeholder="Từ khóa tìm kiếm..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 h-10 px-4 border border-border border-x-0 bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              className="flex-1 h-10 px-4 border border-border border-r-0 rounded-l-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             />
             <button 
               onClick={handleSearch}

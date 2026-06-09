@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -7,16 +7,16 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  LineChart, 
-  Line, 
   PieChart, 
   Pie, 
   Cell,
   AreaChart,
   Area
 } from 'recharts';
-import { TrendingUp, Users, ShoppingBag, DollarSign } from 'lucide-react';
+import { TrendingUp, FileText, Table } from 'lucide-react';
 import StatCard from '../components/admin/StatCard';
+import { exportSalesReportExcel } from '@/api/reportApi';
+import { useToast } from '@/components/ui/Toast';
 
 const REVENUE_DATA = [
   { name: 'Mon', revenue: 450000 },
@@ -38,6 +38,24 @@ const CATEGORY_DATA = [
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'];
 
 const AdminDashboard = () => {
+  const [exporting, setExporting] = useState(false);
+  const { showToast } = useToast();
+
+  const handleExportSales = async () => {
+    setExporting(true);
+    try {
+      // Mặc định xuất 30 ngày gần nhất
+      const toDate = new Date().toISOString().split('T')[0];
+      const fromDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      await exportSalesReportExcel(fromDate, toDate);
+      showToast("Xuất báo cáo doanh thu thành công!", "success");
+    } catch (error) {
+      showToast("Lỗi khi xuất báo cáo!", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Overview Stats */}
@@ -122,7 +140,7 @@ const AdminDashboard = () => {
 
       {/* Recent Activity Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Sales by Day Bar Chart */}
+        {/* Inventory Bar Chart */}
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <h3 className="text-lg font-bold text-gray-800 mb-6">Inventory Status</h3>
           <div className="h-[250px]">
@@ -144,8 +162,17 @@ const AdminDashboard = () => {
             <h3 className="text-2xl font-black mb-2">Need a detailed report?</h3>
             <p className="text-indigo-100 mb-8 max-w-xs text-sm">Download your monthly performance report with full analytics and data.</p>
             <div className="flex flex-wrap gap-4">
-              <button className="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2">
-                <DollarSign size={18} /> Export PDF
+              <button 
+                onClick={handleExportSales}
+                disabled={exporting}
+                className="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {exporting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                ) : (
+                  <Table size={18} />
+                )}
+                {exporting ? 'Exporting...' : 'Export Excel Report'}
               </button>
               <button className="bg-indigo-500 bg-opacity-30 border border-indigo-400 px-6 py-3 rounded-2xl font-bold hover:bg-opacity-40 transition-all">
                 View All

@@ -9,7 +9,8 @@ interface Product {
   id: string; 
   name: string;
   price: number;
-  originalPrice?: number | null;
+  discountPrice?: number | null;
+  discountPercentage?: number | null;
   stockQuantity: number;
   minimumAge: number;
   manufacturer: string;
@@ -35,12 +36,17 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const displayImg = product.img || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80";
 
+  // Giá thực bán là discountPrice nếu có, không thì là price gốc
+  const sellingPrice = product.discountPrice ?? product.price;
+  const hasDiscount = product.discountPrice !== null && product.discountPrice !== undefined && product.discountPrice < product.price;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (product.stockQuantity > 0) {
       animateFlyToCart(e, displayImg);
-      addToCart(product);
+      // Map về structure mà Cart mong muốn (price là giá bán)
+      addToCart({ ...product, price: sellingPrice });
       showToast(`Đã thêm ${product.name} vào giỏ hàng`);
     } else {
       showToast("Sản phẩm hiện đang hết hàng", "error");
@@ -53,10 +59,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
     setLiked(l => !l);
     showToast(liked ? "Đã xóa khỏi yêu thích" : "Đã thêm vào yêu thích", "info");
   };
-
-  const discount = (product.originalPrice && product.originalPrice > product.price)
-    ? Math.round((1 - product.price / product.originalPrice) * 100)
-    : null;
 
   const currentRating = product.rating ?? 0;
   const currentReviews = product.reviews ?? 0;
@@ -86,9 +88,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
               Hết hàng
             </span>
           )}
-          {discount && (
+          {hasDiscount && product.discountPercentage && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-accent text-accent-foreground">
-              -{discount}%
+              -{product.discountPercentage}%
             </span>
           )}
         </div>
@@ -129,9 +131,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
 
         <div className="flex items-center gap-2 mt-auto">
-          <span className="text-primary font-bold text-base">{formatPrice(product.price)}</span>
-          {product.originalPrice && product.originalPrice > product.price && (
-            <span className="text-muted-foreground text-xs line-through">{formatPrice(product.originalPrice)}</span>
+          <span className="text-primary font-bold text-base">{formatPrice(sellingPrice)}</span>
+          {hasDiscount && (
+            <span className="text-muted-foreground text-xs line-through">{formatPrice(product.price)}</span>
           )}
         </div>
         

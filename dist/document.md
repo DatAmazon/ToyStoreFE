@@ -1,140 +1,118 @@
- > Quy ước chung:
-  >    Các API đánh dấu [Auth]* yêu cầu truyền Header: Authorization: Bearer
-  <your_jwt_token>.
-  > *   {id} hoặc {productId} trong URL là các giá trị UUID (GUID), ví dụ:
-  123e4567-e89b-12d3-a456-426614174000.
+ 1. API Sản phẩm (Dành cho trang Bán hàng & Admin)
 
-  ---
-
-  PHẦN 1: API KHÁCH HÀNG & MUA SẮM
-
-  1. Tìm kiếm & Lọc Sản phẩm nâng cao (Mới)
-   * Endpoint: /api/Sales/search
-   * Method: GET
-   * Auth: Không yêu cầu
-   * Tham số truyền trên URL (Query Parameters): Truyền tùy ý, không bắt buộc
-     phải có tất cả.
-       * keyword (string): Tìm theo tên sản phẩm.
-       * categoryId (guid): Lọc theo ID danh mục.
-       * minPrice (decimal): Giá tối thiểu.
-       * maxPrice (decimal): Giá tối đa.
-       * minAge (int): Tìm đồ chơi cho độ tuổi từ minAge trở lên.
-       * sortBy (string): Sắp xếp. Hỗ trợ các giá trị: "price_asc", "price_desc",
-         "newest" (mặc định).
-   * Ví dụ gọi: /api/Sales/search?keyword=lego&minPrice=100000&sortBy=price_asc
-
-  2. Đặt hàng (Checkout) - Có hỗ trợ Mã giảm giá
-   * Endpoint: /api/Sales/checkout
-   * Method: POST
-   * Auth: Tùy chọn (Khách vãng lai truyền null, khách đăng nhập thì truyền ID
-     hoặc để BE tự lấy từ Token).
-   * Body (JSON):
+  1.1. Danh sách & Tìm kiếm sản phẩm
+   * Endpoint: GET /api/Sales/search hoặc GET /api/Products
+   * Response trả về:
 
     1 {
-    2   "customerId": null,
-    3   "customerName": "Nguyễn Văn A",
-    4   "customerPhone": "0901234567",
-    5   "shippingAddress": "123 Đường XYZ, TP.HCM",
-    6   "discountCode": "SUMMER2026",  // Truyền mã giảm giá vào đây (nếu không
-      có thì để null hoặc "")
-    7   "items": [
-    8     { "productId": "guid-1", "quantity": 2 },
-    9     { "productId": "guid-2", "quantity": 1 }
-   10   ]
-   11 }
+    2   "success": true,
+    3   "data": [
+    4     {
+    5       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    6       "name": "Siêu nhân Gao",
+    7       "price": 500000.0,          // Giá gốc
+    8       "discountPrice": 400000.0,   // Giá thực bán (FE hiện màu đỏ)
+    9       "discountPercentage": 20,    // % giảm (FE hiện nhãn -20%)
+   10       "stockQuantity": 50,
+   11       "imageUrl": "https://...",
+   12       "categoryName": "Đồ chơi"
+   13     }
+   14   ],
+   15   "message": "Success"
+   16 }
 
-  3. Hồ sơ cá nhân (Profile)
-  A. Lấy thông tin cá nhân
-   * Endpoint: /api/Profile
-   * Method: GET
-   * Auth: [Auth]
-   * Response: Trả về FullName, Email, PhoneNumber, Address. Tiện lợi để FE tự
-     điền (Auto-fill) vào form Checkout.
+  1.2. Thêm/Cập nhật sản phẩm (Admin)
+   * Endpoint: POST /api/Products hoặc PUT /api/Products/{id}
+   * Payload gửi lên (Request): Giống hệt cấu trúc trả về ở trên (trừ categoryName).
 
-  B. Cập nhật thông tin cá nhân
-   * Endpoint: /api/Profile
-   * Method: PUT
-   * Auth: [Auth]
-   * Body (JSON):
+  ---
 
-   1 {
-   2   "fullName": "Nguyễn Văn A Mới",
-   3   "phoneNumber": "0988888888",
-   4   "address": "456 Đường ABC, Hà Nội"
-   5 }
-
-  4. Danh sách Yêu thích (Wishlist)
-   * Thêm vào Yêu thích: POST /api/Wishlist/add/{productId} [Auth] (Body rỗng)
-   * Xóa khỏi Yêu thích: DELETE /api/Wishlist/remove/{productId} [Auth]
-   * Lấy danh sách đã lưu: GET /api/Wishlist [Auth] (Trả về list ProductDto).
-   * Kiểm tra xem SP đã thả tim chưa (Để đổi màu icon tim): GET
-     /api/Wishlist/check/{productId} [Auth] -> Trả về JSON: { "isInWishlist":
-     true/false }
-
-  5. Đánh giá Sản phẩm (Reviews)
-  A. Lấy danh sách đánh giá của 1 sản phẩm
-   * Endpoint: /api/ProductReviews/product/{productId}
-   * Method: GET
-   * Auth: Không yêu cầu
-   * Response: Trả về danh sách các review và điểm trung bình (AverageRating).
-
-  B. Gửi đánh giá mới
-   * Endpoint: /api/ProductReviews/add
-   * Method: POST
-   * Auth: [Auth]
-   * Body (JSON): (Không cần truyền CustomerId hay CustomerName, Backend sẽ tự
-     lấy từ Token).
+  2. API Đặt hàng (Checkout)
+   * Endpoint: POST /api/Sales/checkout
+   * Payload gửi lên (FE không gửi giá tiền):
 
    1 {
-   2   "productId": "guid-san-pham",
-   3   "rating": 5,           // Bắt buộc từ 1 đến 5
-   4   "comment": "Đồ chơi rất đẹp, bé nhà mình rất thích!" // Tùy chọn
+   2   "customerName": "Nguyễn Văn A",
+   3   "customerPhone": "0987654321",
+   4   "shippingAddress": "123 Lê Lợi, TP.HCM",
+   5   "discountCode": "SUMMER20",
+   6   "items": [
+   7     { "productId": "guid-id-1", "quantity": 2 }
+   8   ]
+   9 }
+   * Response trả về:
+
+   1 {
+   2   "success": true,
+   3   "data": "3fa85f64-5717-4562-b3fc-2c963f66afa6", // Trả về ID đơn hàng vừa tạo
+   4   "message": "Đặt hàng thành công"
    5 }
 
   ---
 
-  PHẦN 2: API QUẢN TRỊ (ADMIN)
-  (Tất cả API dưới đây đều yêu cầu Header: Authorization: Bearer
-  <token_cua_admin>)
+  3. API Quản lý Đơn hàng
 
-  6. Bảng điều khiển (Dashboard Statistics)
-   * Endpoint: /api/admin/Dashboard/statistics
-   * Method: GET
-   * Mô tả: Dùng để vẽ biểu đồ và hiển thị thẻ tổng quan ở trang chủ Admin.
-   * Response (JSON):
+  3.1. Danh sách đơn hàng (Admin & Khách hàng)
+   * Endpoint Admin: GET /api/admin/orders
+   * Endpoint Khách: GET /api/Sales/my-orders
+   * Response trả về:
+
+    1 {
+    2   "success": true,
+    3   "data": [
+    4     {
+    5       "orderId": "3fa85f64-...",
+    6       "customerName": "Nguyễn Văn A",
+    7       "customerPhone": "0987654321",
+    8       "totalAmount": 1000000.0, // Tổng tiền hàng (trước coupon)
+    9       "discount": 100000.0,      // Tiền giảm từ mã coupon
+   10       "finalAmount": 900000.0,   // TIỀN KHÁCH PHẢI TRẢ
+   11       "status": "Chờ xác nhận",
+   12       "orderDate": "2026-06-09T10:00:00Z"
+   13     }
+   14   ]
+   15 }
+
+  3.2. Xem chi tiết 1 đơn hàng
+   * Endpoint: GET /api/admin/orders/{id}
+   * Response trả về:
+
+    1 {
+    2   "success": true,
+    3   "data": {
+    4     "orderId": "3fa85f64-...",
+    5     "customerName": "Nguyễn Văn A",
+    6     "shippingAddress": "123 Lê Lợi...",
+    7     "totalAmount": 1000000.0,
+    8     "discount": 100000.0,
+    9     "finalAmount": 900000.0,
+   10     "status": "Chờ xác nhận",
+   11     "details": [
+   12       {
+   13         "productName": "Siêu nhân Gao",
+   14         "quantity": 2,
+   15         "price": 400000.0 // Giá lúc mua (đã tính giá giảm của sp)
+   16       }
+   17     ]
+   18   }
+   19 }
+
+  ---
+
+  4. API Thay đổi trạng thái (Admin)
+   * Endpoint: PUT /api/admin/orders/{id}/status
+   * Payload gửi lên (Dạng chuỗi raw): "Đang giao hàng" hoặc "Đã hủy".
+   * Response:
 
    1 {
-   2   "todayRevenue": 1500000,
-   3   "newOrders": 5,
-   4   "totalCustomers": 120,
-   5   "lowStockAlerts": [
-   6     { "productId": "guid-1", "name": "Lego City", "stockQuantity": 2 }
-   7   ]
-   8 }
+   2   "success": true,
+   3   "data": null,
+   4   "message": "Cập nhật trạng thái đơn hàng thành: Đang giao hàng"
+   5 }
 
-  7. Quản lý trạng thái Đơn hàng
-  A. Lấy toàn bộ đơn hàng của cửa hàng
-   * Endpoint: /api/admin/orders
-   * Method: GET
-   * Response: List các đơn hàng xếp theo thứ tự mới nhất.
+  ---
 
-  B. Cập nhật trạng thái đơn hàng
-   * Endpoint: /api/admin/orders/{id}/status
-   * Method: PUT
-   * Body (RAW chuỗi, CÓ DẤU NGOẶC KÉP): "Confirmed" hoặc "Shipping" hoặc
-     "Delivered" hoặc "Cancelled" hoặc "Completed".
-   * Lưu ý FE: Body gửi lên chỉ là một chuỗi (String) có bọc trong ngoặc kép,
-     không phải object.
-   * Ví dụ Body: "Shipping"
-
-  8. Xuất báo cáo Tồn kho (Export Reports)
-  Khi FE gọi các API này, Backend sẽ trả về luồng dữ liệu nhị phân (Binary File).
-  FE cần thiết lập responseType: 'blob' (nếu dùng Axios) để tải file xuống.
-   * Xuất Excel: GET /api/admin/Reports/inventory/excel
-   * Xuất PDF: GET /api/admin/Reports/inventory/pdf
-
-  9. Nhật ký hệ thống (Audit Logs)
-   * Endpoint: /api/admin/audit-logs?count=50
-   * Method: GET
-   * Mô tả: Trả về lịch sử ai vừa thêm/sửa/xóa bảng dữ liệu nào, lúc mấy giờ. Mặc
-     định trả về 50 dòng mới nhất.
+  5. API Xuất báo cáo (File)
+   * Hóa đơn PDF: GET /api/admin/Reports/invoice/{id}/pdf
+   * Doanh thu Excel: GET /api/SalesReport/excel?fromDate=...&toDate=...
+   * Đặc điểm: API này trả về Binary File. FE chỉ cần mở link trong tab mới (window.open) là trình duyệt tự tải file về.

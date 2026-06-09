@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { exportCustomersReportExcel } from '@/api/reportApi';
+import { useToast } from '@/components/ui/Toast';
+import { Table } from 'lucide-react';
 
 const customers = [
   { name: 'Jane Cooper', company: 'Microsoft', phone: '(225) 555-0118', email: 'jane@microsoft.com', country: 'United States', status: 'Active' },
@@ -12,6 +15,21 @@ const customers = [
 ];
 
 const CustomerTable = () => {
+  const [exporting, setExporting] = useState(false);
+  const { showToast } = useToast();
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportCustomersReportExcel();
+      showToast("Xuất danh sách khách hàng thành công!", "success");
+    } catch (error) {
+      showToast("Lỗi khi xuất báo cáo!", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl shadow-sm mt-8 overflow-hidden">
       <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -20,6 +38,18 @@ const CustomerTable = () => {
           <p className="text-green-500 text-sm font-medium">Active Members</p>
         </div>
         <div className="flex items-center gap-4">
+          <button 
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-100 transition-colors disabled:opacity-50"
+          >
+            {exporting ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+            ) : (
+              <Table size={18} />
+            )}
+            {exporting ? 'Exporting...' : 'Export Excel'}
+          </button>
           <div className="relative">
             <input 
               type="text" 

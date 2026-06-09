@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/admin/Sidebar';
 import OrderTable, { Order } from '../components/admin/OrderTable';
 import OrderDetailModal from '../components/admin/OrderDetailModal';
-import { getMyOrders, cancelOrder } from '@/api/orderApi';
+import { getAllOrdersAdmin, updateOrderStatusAdmin } from '@/api/orderApi';
+import { exportOrdersReportExcel } from '@/api/reportApi';
 import { useToast } from '@/components/ui/Toast';
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const { showToast } = useToast();
   
   // Modal state
@@ -18,26 +20,37 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      // Lưu ý: Trong thực tế Admin cần API getAllOrders, 
-      // nhưng ở đây tôi dùng my-orders theo document.md
-      const response = await getMyOrders();
-      
-      // Map dữ liệu từ API sang Interface Order của Table
-      const mappedOrders = response.data.map((o: any) => ({
-        id: o.id,
-        customerName: o.customerName || 'Khách hàng',
-        orderDate: o.orderDate,
-        totalAmount: o.totalAmount || 0,
-        status: o.status,
-        paymentMethod: o.paymentMethod || 'COD'
+      const response = await getAllOrdersAdmin();
+      // Đảm bảo dữ liệu luôn là mảng và có các giá trị mặc định
+      const safeData = (response.data || []).map((o: any) => ({
+        ...o,
+        orderId: o.orderId || o.id || 'N/A',
+        customerName: o.customerName || 'Anonymous',
+        customerPhone: o.customerPhone || '',
+        totalAmount: o.totalAmount ?? 0,
+        discount: o.discount ?? 0,
+        finalAmount: o.finalAmount ?? (o.totalAmount || 0),
+        status: o.status || 'Chờ xác nhận',
+        orderDate: o.orderDate || new Date().toISOString()
       }));
-      
-      setOrders(mappedOrders);
+      setOrders(safeData);
     } catch (error: any) {
       console.error("Lỗi khi tải danh sách đơn hàng:", error);
       showToast("Không thể tải danh sách đơn hàng!", "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportOrdersReportExcel();
+      showToast("Xuất báo cáo thành công!", "success");
+    } catch (error: any) {
+      showToast("Lỗi khi xuất báo cáo!", "error");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -59,14 +72,7 @@ const OrderManagement = () => {
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
-      // Nếu trạng thái là Cancelled, gọi API cancel
-      if (newStatus === 'Cancelled') {
-        await cancelOrder(id);
-      } else {
-        // Giả sử có API update status chung, nếu không thì log thông báo
-        console.log(`Cập nhật trạng thái ${id} thành ${newStatus}`);
-      }
-      
+      await updateOrderStatusAdmin(id, newStatus);
       showToast("Cập nhật trạng thái thành công!", "success");
       fetchOrders(); // Tải lại danh sách
       setIsModalOpen(false);
@@ -82,12 +88,20 @@ const OrderManagement = () => {
       <main className="flex-1 p-4 md:p-6 lg:p-10 flex flex-col">
         <header className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Order Management</h1>
-            <p className="text-gray-500">Track and update customer orders</p>
+            <h1 className="text-2xl font-bold text-gray-800">Quản lý đơn hàng</h1>
+            <p className="text-gray-500">Theo dõi và cập nhật trạng thái đơn hàng</p>
           </div>
-          <button className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Export CSV
+          <button 
+            onClick={handleExport}
+            disabled={exporting}
+            className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 flex items-center gap-2 disabled:opacity-50"
+          >
+            {exporting ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            )}
+            {exporting ? 'Exporting...' : 'Xuất Excel'}
           </button>
         </header>
 
@@ -110,7 +124,7 @@ const OrderManagement = () => {
           onClose={() => setIsModalOpen(false)}
           order={selectedOrder}
           mode={modalMode}
-          onUpdateSubmit={handleUpdateStatus}
+          onUpdateSubmit={(orderId, newStatus) => handleUpdateStatus(orderId, newStatus)}
         />
       </main>
     </div>

@@ -4,24 +4,31 @@ import api from '../api/api';
 import Sidebar from '../components/admin/Sidebar';
 import ProductTable from '../components/admin/ProductTable';
 import ProductModal from '../components/admin/ProductModal';
-
-// Định nghĩa kiểu dữ liệu cho Product
-export interface Product {
-  id?: number | string;
-  name: string;
-  price: number;
-  categoryId?: string;
-  categoryName?: string;
-  stockQuantity: number;
-  imageUrl?: string | File | null;
-}
+import { exportInventoryReportExcel, exportInventoryReportPDF } from '@/api/reportApi';
+import { useToast } from '@/components/ui/Toast';
+import { FileText, Table } from 'lucide-react';
 
 const ProductManagement = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0); 
+  const { showToast } = useToast();
+
+  const handleExport = async (type: 'excel' | 'pdf') => {
+    setExporting(type);
+    try {
+      if (type === 'excel') await exportInventoryReportExcel();
+      else await exportInventoryReportPDF();
+      showToast("Xuất báo cáo tồn kho thành công!", "success");
+    } catch (error) {
+      showToast("Lỗi khi xuất báo cáo!", "error");
+    } finally {
+      setExporting(null);
+    }
+  };
   
   // Pagination State
   const [pageNumber, setPageNumber] = useState(1);
@@ -70,6 +77,12 @@ const ProductManagement = () => {
     if (product.id) data.append('Id', product.id.toString());
     data.append('Name', product.name);
     data.append('Price', product.price.toString());
+    if (product.discountPrice !== undefined && product.discountPrice !== null) {
+      data.append('DiscountPrice', product.discountPrice.toString());
+    }
+    if (product.discountPercentage !== undefined && product.discountPercentage !== null) {
+      data.append('DiscountPercentage', product.discountPercentage.toString());
+    }
     data.append('CategoryId', product.categoryId || '');
     data.append('StockQuantity', product.stockQuantity.toString());
     
@@ -88,34 +101,41 @@ const ProductManagement = () => {
       await api.post(API_ENDPOINT, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      showToast("Thêm sản phẩm thành công!", "success");
       fetchProducts();
       setIsModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi khi thêm sản phẩm:", error);
+      showToast(error.message || "Lỗi khi thêm sản phẩm!", "error");
     }
   };
 
   const handleEditProduct = async (product: Product) => {
     try {
       const formData = createFormData(product);
-      await api.put(`${API_ENDPOINT}/update-product`, formData, {
+      // Theo document.md, endpoint cập nhật là PUT /api/Products/{id}
+      await api.put(`${API_ENDPOINT}/${product.id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      showToast("Cập nhật sản phẩm thành công!", "success");
       fetchProducts();
       setIsModalOpen(false);
       setEditingProduct(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi khi sửa sản phẩm:", error);
+      showToast(error.message || "Lỗi khi cập nhật sản phẩm!", "error");
     }
   };
 
-  const handleDeleteProduct = async (id: number) => {
+  const handleDeleteProduct = async (id: number | string) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
       try {
         await api.delete(`${API_ENDPOINT}/${id}`);
+        showToast("Xóa sản phẩm thành công!", "success");
         fetchProducts();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Lỗi khi xóa sản phẩm:", error);
+        showToast(error.message || "Lỗi khi xóa sản phẩm!", "error");
       }
     }
   };
@@ -127,18 +147,48 @@ const ProductManagement = () => {
       <main className="flex-1 p-4 md:p-6 lg:p-10 flex flex-col">
         <header className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
-            <p className="text-gray-500">Manage your store products</p>
+            <h1 className="text-2xl font-bold text-gray-800">Quản lý sản phẩm</h1>
+            <p className="text-gray-500">Quản lý kho hàng và thông tin sản phẩm</p>
           </div>
-          <button 
-            onClick={() => {
-              setEditingProduct(null);
-              setIsModalOpen(true);
-            }}
-            className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
-          >
-            + Add New Product
-          </button>
+          <div className="flex gap-3">
+            <div className="flex border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+               <button 
+                onClick={() => handleExport('excel')}
+                disabled={!!exporting}
+                className="bg-white text-gray-700 px-4 py-2.5 font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 border-r border-gray-200 disabled:opacity-50"
+                title="Xuất báo cáo Excel"
+              >
+                {exporting === 'excel' ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                ) : (
+                  <Table size={18} className="text-green-600" />
+                )}
+                Excel
+              </button>
+              <button 
+                onClick={() => handleExport('pdf')}
+                disabled={!!exporting}
+                className="bg-white text-gray-700 px-4 py-2.5 font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+                title="Xuất báo cáo PDF"
+              >
+                {exporting === 'pdf' ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                ) : (
+                  <FileText size={18} className="text-red-600" />
+                )}
+                PDF
+              </button>
+            </div>
+            <button 
+              onClick={() => {
+                setEditingProduct(null);
+                setIsModalOpen(true);
+              }}
+              className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+            >
+              + Thêm sản phẩm mới
+            </button>
+          </div>
         </header>
 
         <div className="flex-1">

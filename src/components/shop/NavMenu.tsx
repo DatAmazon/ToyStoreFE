@@ -19,11 +19,13 @@ const NavMenu = () => {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  const isHomepage = location.pathname === '/';
+
   return (
     <div className="bg-card border-b border-border shadow-sm sticky top-[68px] z-40">
       <div className="container mx-auto flex items-center">
-        {/* Category button */}
-        <div className="flex-shrink-0 relative">
+        {/* Category button - Ẩn trên desktop ở trang chủ vì đã có sidebar */}
+        <div className={`flex-shrink-0 relative ${isHomepage ? 'lg:hidden' : ''}`}>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex items-center gap-2 px-4 py-3.5 bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-dark transition-colors"
