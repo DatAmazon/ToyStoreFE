@@ -1,47 +1,166 @@
-  💻 Technical Implementation (Chi tiết kỹ thuật)
+## Frontend Implementation
 
-  Dự án tập trung vào việc xây dựng một hệ thống Frontend có khả năng mở rộng, quản lý state phức tạp và tối ưu hóa luồng dữ liệu giữa Client - Server.
+### Technologies
 
-  1. Kiến trúc hệ thống & Quản lý State
-   * Core Stack: React 18 + TypeScript + Vite. Sử dụng TypeScript để định nghĩa chặt chẽ các Interfaces cho Model (Product, Order, User), giảm thiểu lỗi ép kiểu và tăng tốc độ phát triển.
-   * State Management: Sử dụng React Context API để quản lý Global State (Cart, Authentication, Toast). 
-       * Cart Logic: Implement logic đồng bộ 2 chiều (LocalStorage <-> Server API). Giỏ hàng được khởi tạo từ LocalStorage để đảm bảo tốc độ load trang, sau đó sẽ re-validate với Server sau khi người dùng Login.
-   * Routing: React Router v7 với cơ chế phân quyền (Private Routes) để bảo vệ các tài nguyên phía Admin, ngăn chặn truy cập trái phép từ phía Client.
+* React 18
+* TypeScript
+* Vite
+* React Router
+* Axios
+* Tailwind CSS
+* Recharts
+* Context API
 
-  2. Xử lý API & Data Flow
-   * Axios Base: Đóng gói các API call vào thư mục src/api/ để quản lý tập trung. 
-   * Admin Dashboard: Tích hợp Recharts để xử lý dữ liệu thô từ API và mapping thành các biểu đồ doanh thu/đơn hàng. Logic xử lý dữ liệu được tách rời khỏi UI component để đảm bảo tính Single Responsibility.
-   * UI Component Architecture: Áp dụng mô hình Atomic Design thu nhỏ. Các thành phần UI cơ bản (Button, Modal, Input) được viết dưới dạng Generic Components trong thư mục src/components/ui/, giúp tái sử dụng cho cả
-     giao diện Shop và Admin Dashboard.
+---
 
-  3. Tối ưu hóa & UX
-   * Form Handling: Sử dụng uncontrolled/controlled components linh hoạt tùy theo độ phức tạp của form (ví dụ: Product Modal dùng để Create/Update sản phẩm).
-   * Optimistic UI: Trong phần cập nhật giỏ hàng, hệ thống ưu tiên cập nhật UI trước (tăng/giảm số lượng) và thực hiện API call ngầm để tạo trải nghiệm "zero-latency" cho người dùng.
-   * Styling: Tailwind CSS kết hợp với tailwind-merge và clsx để quản lý các class động, giúp code CSS sạch và dễ bảo trì.
+## Architecture
 
-  ---
+### State Management
 
-  🚀 Hướng dẫn chạy dự án (Getting Started)
+Sử dụng React Context API để quản lý các state dùng chung trong toàn bộ ứng dụng:
 
-  1. Yêu cầu hệ thống
-   * Node.js (phiên bản 18.x trở lên)
-   * npm hoặc yarn
+* Authentication Context
+* Cart Context
+* Toast Notification Context
 
-  2. Cài đặt
-   1. Clone project:
-    git clone https://github.com/your-username/ToyStoreManagementFE.git
-    cd ToyStoreManagementFE
+Giỏ hàng được lưu trong LocalStorage để duy trì dữ liệu khi tải lại trang. Sau khi người dùng đăng nhập, dữ liệu giỏ hàng được đồng bộ với server.
 
-   3. Cài đặt dependencies:
-    npm install
-    
-   4. Cấu hình môi trường: Tạo file .env ở thư mục gốc và cấu hình API URL (nếu có):
-    VITE_API_BASE_URL=http://your-api-url.com
+### Routing
 
-  3. Chạy dự án
-   * Chế độ phát triển (Development):
-     npm run dev
-     Mở trình duyệt tại: http://localhost:5173
+Sử dụng React Router để quản lý điều hướng giữa các trang.
 
-   * Build sản phẩm (Production):
-     npm run build
+Các trang quản trị được bảo vệ bằng cơ chế Private Route, yêu cầu người dùng đăng nhập và có quyền phù hợp trước khi truy cập.
+
+---
+
+## API Integration
+
+Các API được tách riêng trong thư mục `src/api` để dễ bảo trì và tái sử dụng.
+
+```text
+src
+├── api
+│   ├── authApi.ts
+│   ├── productApi.ts
+│   ├── orderApi.ts
+│   └── userApi.ts
+```
+
+Axios được cấu hình tập trung để:
+
+* Thiết lập Base URL
+* Tự động gắn Access Token
+* Xử lý lỗi từ API
+* Refresh Token khi cần
+
+---
+
+## UI Components
+
+Các thành phần giao diện được tách thành các component tái sử dụng:
+
+```text
+src
+├── components
+│   ├── ui
+│   │   ├── Button
+│   │   ├── Input
+│   │   ├── Modal
+│   │   └── Pagination
+```
+
+Điều này giúp giảm lặp code và đảm bảo giao diện nhất quán giữa các màn hình.
+
+---
+
+## Dashboard
+
+Trang quản trị sử dụng Recharts để hiển thị:
+
+* Doanh thu theo thời gian
+* Số lượng đơn hàng
+* Thống kê sản phẩm
+
+Dữ liệu được xử lý trước khi truyền vào biểu đồ để tách biệt logic và giao diện.
+
+---
+
+## User Experience
+
+### Shopping Cart
+
+Khi người dùng thay đổi số lượng sản phẩm trong giỏ hàng:
+
+1. Giao diện được cập nhật ngay lập tức.
+2. API được gọi ở nền để lưu dữ liệu.
+3. Nếu xảy ra lỗi, trạng thái sẽ được đồng bộ lại từ server.
+
+### Form Handling
+
+Sử dụng TypeScript để kiểm soát dữ liệu đầu vào và giảm lỗi trong quá trình nhập liệu.
+
+### Styling
+
+Tailwind CSS được sử dụng để xây dựng giao diện.
+
+Kết hợp với:
+
+* clsx
+* tailwind-merge
+
+để quản lý class động và tránh trùng lặp CSS.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+* Node.js 18+
+* npm hoặc yarn
+
+### Installation
+
+Clone repository:
+
+```bash
+git clone https://github.com/your-username/ToyStoreManagementFE.git
+
+cd ToyStoreManagementFE
+```
+
+Cài đặt dependencies:
+
+```bash
+npm install
+```
+
+Tạo file `.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:5000/api
+```
+
+### Run Development Server
+
+```bash
+npm run dev
+```
+
+Ứng dụng sẽ chạy tại:
+
+```text
+http://localhost:5173
+```
+
+### Build Production
+
+```bash
+npm run build
+```
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
